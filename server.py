@@ -150,9 +150,20 @@ def admin_backup():
 @app.route("/admin/backup-email", methods=["POST"])
 @admin_obrigatorio
 def admin_backup_email():
-    """Dispara o envio do backup por e-mail JÁ (sem esperar o prazo automático) -- útil pra testar se a configuração está funcionando."""
-    ok, mensagem = backup_email.enviar_backup_agora()
-    flash(mensagem)
+    """
+    Dispara o envio do backup por e-mail JÁ (sem esperar o prazo
+    automático) -- útil pra testar se a configuração está funcionando.
+
+    Roda numa THREAD em segundo plano, não direto aqui na requisição
+    -- enviar e-mail com anexo pode demorar mais que o tempo limite
+    padrão do servidor (30s), e nesse caso o Render mata o processo no
+    meio do envio (foi exatamente o que aconteceu no teste anterior).
+    Rodando em segundo plano, a página responde na hora, e o envio
+    continua até terminar de verdade, sem prazo apertado.
+    """
+    import threading
+    threading.Thread(target=backup_email.enviar_backup_agora, daemon=True).start()
+    flash("Envio iniciado em segundo plano -- confira sua caixa de entrada em alguns instantes.")
     return redirect(url_for("admin_painel"))
 
 

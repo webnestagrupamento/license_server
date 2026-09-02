@@ -20,9 +20,9 @@ cliente na hora de ativar e nas verificações periódicas depois disso.
    repositório
 4. Configure:
    - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `gunicorn server:app` (ou, se preferir não
-     instalar o gunicorn, `python server.py` funciona também, só que
-     é menos robusto pra produção -- veja nota abaixo)
+   - **Start Command**: `gunicorn server:app --timeout 120` (o `--timeout 120`
+     é importante -- sem isso, o envio de backup por e-mail pode ser
+     interrompido no meio se demorar mais que os 30 segundos padrão)
    - **Instance Type**: Free (suficiente pro volume de uma licença por
      venda, não é um sistema de alto tráfego)
 5. Em **Environment Variables**, adicione:
