@@ -66,6 +66,26 @@ anos de uso), troque as DUAS cópias ao mesmo tempo pro mesmo valor novo
 -- e saiba que isso invalida todas as ativações já feitas (todo mundo
 precisaria reativar).
 
+## Backup automático por e-mail (opcional, mas recomendado)
+
+Além do disco persistente (que já protege contra reinícios) e do
+botão "Baixar backup" no painel (pra baixar manualmente quando
+quiser), dá pra configurar o envio automático de uma cópia do banco
+por e-mail, de tempos em tempos, sem precisar lembrar de nada.
+
+No painel do Render, em **Environment**, adicione:
+
+  - `BACKUP_EMAIL_REMETENTE` -- a conta de e-mail que vai enviar (ex: Gmail)
+  - `BACKUP_EMAIL_SENHA_APP` -- a senha de APP dessa conta (não é a senha normal --
+    veja https://myaccount.google.com/apppasswords, precisa ter a
+    verificação em duas etapas ativada primeiro)
+  - `BACKUP_EMAIL_DESTINATARIO` -- pra onde vai o backup (pode ser a mesma conta)
+  - `BACKUP_EMAIL_DIAS` -- opcional, de quantos em quantos dias envia (padrão: 7)
+
+Depois de configurar essas variáveis e o Render reimplantar sozinho,
+o painel mostra "✅ Backup automático por e-mail ativo" com um botão
+pra testar o envio na hora, sem precisar esperar o prazo.
+
 ## Usando o painel administrativo
 
 Acesse a URL do servidor (ex: `https://webnest-licencas.onrender.com`)
