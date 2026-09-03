@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Licenças WebNest -- Painel</title>
+    <style>
+        body { font-family: -apple-system, Segoe UI, Arial, sans-serif; background: #eef1f6; margin: 0; padding: 24px; color: #16233a; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h1 { font-size: 22px; color: #1a3d6d; margin: 0; }
+        .card { background: white; border-radius: 10px; padding: 22px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        th { text-align: left; padding: 8px 10px; border-bottom: 2px solid #eef1f6; color: #556; font-size: 12px; text-transform: uppercase; }
+        td { padding: 8px 10px; border-bottom: 1px solid #f0f2f6; vertical-align: middle; }
+        .chave { font-family: monospace; font-weight: 600; }
+        .badge { padding: 3px 9px; border-radius: 12px; font-size: 11.5px; font-weight: 600; }
+        .badge-ativa { background: #e2f6ea; color: #1c7a41; }
+        .badge-nao_ativada { background: #eef1f6; color: #667; }
+        .badge-revogada { background: #fbe3e0; color: #a12622; }
+        .btn { padding: 5px 10px; border-radius: 5px; border: 1px solid #ccd3de; background: white; cursor: pointer; font-size: 12px; margin-right: 4px; }
+        .btn-perigo { color: #a12622; border-color: #a12622; }
+        .form-gerar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+        .form-gerar input { padding: 9px 11px; border: 1px solid #ccd3de; border-radius: 6px; }
+        .flash { background: #fde3cf; color: #97650f; padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 13.5px; }
+        .logout-form { display: inline; }
+        .logout-btn { background: none; border: 1px solid #ccd3de; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🔑 Licenças WebNest</h1>
+        <div style="display:flex; gap:8px;">
+            <a class="logout-btn" href="{{ url_for('admin_backup') }}" style="text-decoration:none; display:inline-block;">📥 Baixar backup</a>
+            <form class="logout-form" method="post" action="{{ url_for('admin_logout') }}">
+                <button class="logout-btn" type="submit">Sair</button>
+            </form>
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}{% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+
+    <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        {% if backup_email_configurado %}
+        <div style="font-size:13.5px; color:#1c7a41;">✅ Backup automático por e-mail ativo -- envia a cada {{ backup_email_dias }} dias, sozinho.</div>
+        <form method="post" action="{{ url_for('admin_backup_email') }}">
+            <button class="btn" type="submit" style="background:#1a3d6d; color:white; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-size:13px;">✉️ Enviar backup por e-mail agora (testar)</button>
+        </form>
+        {% else %}
+        <div style="font-size:13.5px; color:#97650f;">⚠️ Backup automático por e-mail não configurado -- defina BACKUP_EMAIL_REMETENTE, BACKUP_EMAIL_SENHA_APP e BACKUP_EMAIL_DESTINATARIO nas variáveis de ambiente do serviço, no Render, pra ativar.</div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2 style="margin-top:0; font-size:16px;">Gerar nova licença</h2>
+        <form class="form-gerar" method="post" action="{{ url_for('admin_gerar') }}">
+            <div>
+                <label style="display:block; font-size:12px; color:#556; margin-bottom:4px;">Cliente</label>
+                <input type="text" name="cliente" required placeholder="Ex: Indústria Silva Ltda" style="min-width:240px;">
+            </div>
+            <div>
+                <label style="display:block; font-size:12px; color:#556; margin-bottom:4px;">Observações (opcional)</label>
+                <input type="text" name="observacoes" placeholder="Ex: Venda em 01/09/2026, plano completo" style="min-width:280px;">
+            </div>
+            <button class="btn" type="submit" style="background:#1a3d6d; color:white; border:none; padding:9px 16px;">➕ Gerar chave</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2 style="margin-top:0; font-size:16px;">Ativação manual (cliente sem internet)</h2>
+        <p style="font-size:13px; color:#556; margin-top:0;">
+            Se o computador do cliente não tem internet, a tela de ativação dele mostra um
+            "código da máquina" -- peça pra ele te mandar esse código (WhatsApp, e-mail etc.),
+            cole aqui junto com a chave, e mande o token gerado de volta pra ele colar na tela dele.
+        </p>
+        <form class="form-gerar" method="post" action="{{ url_for('admin_ativar_manual') }}">
+            <div>
+                <label style="display:block; font-size:12px; color:#556; margin-bottom:4px;">Chave de licença</label>
+                <input type="text" name="chave" required placeholder="WEBNEST-XXXX-XXXX-XXXX-XXXX" style="min-width:240px; font-family:monospace;">
+            </div>
+            <div>
+                <label style="display:block; font-size:12px; color:#556; margin-bottom:4px;">Código da máquina (do cliente)</label>
+                <input type="text" name="maquina_id" required placeholder="Cole aqui o código que o cliente mandou" style="min-width:320px; font-family:monospace;">
+            </div>
+            <div>
+                <label style="display:block; font-size:12px; color:#556; margin-bottom:4px;">Nome da máquina (opcional)</label>
+                <input type="text" name="nome_maquina" placeholder="Ex: PC-Producao-01" style="min-width:160px;">
+            </div>
+            <button class="btn" type="submit" style="background:#97650f; color:white; border:none; padding:9px 16px;">🔑 Gerar token de ativação</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2 style="margin-top:0; font-size:16px;">Licenças ({{ licencas|length }})</h2>
+        <table>
+            <tr>
+                <th>Chave</th><th>Cliente</th><th>Status</th><th>Máquina</th>
+                <th>Criada em</th><th>Última verificação</th><th>Ações</th>
+            </tr>
+            {% for l in licencas %}
+            <tr>
+                <td class="chave">{{ l.chave }}</td>
+                <td>{{ l.cliente }}{% if l.observacoes %}<br><span style="color:#8a93a3; font-size:11.5px;">{{ l.observacoes }}</span>{% endif %}</td>
+                <td><span class="badge badge-{{ l.status }}">{{ l.status.replace('_', ' ') }}</span></td>
+                <td>{{ l.nome_maquina or '—' }}</td>
+                <td>{{ l.criada_em[:10] if l.criada_em else '—' }}</td>
+                <td>{{ l.ultima_verificacao[:16].replace('T', ' ') if l.ultima_verificacao else '—' }}</td>
+                <td style="white-space:nowrap;">
+                    {% if l.status != 'revogada' %}
+                    <form class="logout-form" method="post" action="{{ url_for('admin_revogar') }}" onsubmit="return confirm('Revogar a licença de {{ l.cliente }}? O sistema dela vai parar de funcionar na próxima verificação.');">
+                        <input type="hidden" name="chave" value="{{ l.chave }}">
+                        <button class="btn btn-perigo" type="submit">Revogar</button>
+                    </form>
+                    {% endif %}
+                    {% if l.status != 'nao_ativada' %}
+                    <form class="logout-form" method="post" action="{{ url_for('admin_liberar') }}" onsubmit="return confirm('Liberar a licença de {{ l.cliente }}? Ela vai poder ser ativada numa máquina nova.');">
+                        <input type="hidden" name="chave" value="{{ l.chave }}">
+                        <button class="btn" type="submit">Liberar</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            {% if not licencas %}
+            <tr><td colspan="7" style="color:#8a93a3; text-align:center; padding:20px;">Nenhuma licença gerada ainda.</td></tr>
+            {% endif %}
+        </table>
+    </div>
+</div>
+</body>
+</html>
