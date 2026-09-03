@@ -8,6 +8,7 @@ licença está instalada.
 """
 
 import os
+import hmac
 from functools import wraps
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash
 
@@ -81,7 +82,7 @@ def api_verificar():
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
-        if request.form.get("senha") == SENHA_ADMIN:
+        if hmac.compare_digest(request.form.get("senha") or "", SENHA_ADMIN):
             session["admin_logado"] = True
             return redirect(url_for("admin_painel"))
         flash("Senha incorreta.")
@@ -128,6 +129,41 @@ def admin_liberar():
     chave = request.form.get("chave")
     db.liberar_licenca(chave)
     flash(f"Licença {chave} liberada -- pode ser ativada numa máquina nova agora.")
+    return redirect(url_for("admin_painel"))
+
+
+@app.route("/admin/ativar-manual", methods=["POST"])
+@admin_obrigatorio
+def admin_ativar_manual():
+    """
+    Ativação manual -- pro caso do computador do cliente não ter
+    internet nenhuma pra falar com este servidor sozinho. O cliente
+    manda pra você (por WhatsApp, e-mail etc.) o "código da máquina"
+    que aparece na tela de ativação dele, você cola aqui junto com a
+    chave, e o sistema gera um token que você manda de volta pro
+    cliente colar na tela dele -- ativa sem precisar de internet
+    NAQUELE computador (só neste servidor, que você já está usando).
+    """
+    chave = (request.form.get("chave") or "").strip().upper()
+    maquina_id = (request.form.get("maquina_id") or "").strip()
+    nome_maquina = (request.form.get("nome_maquina") or "").strip()
+
+    if not chave or not maquina_id:
+        flash("Informe a chave e o código da máquina.")
+        return redirect(url_for("admin_painel"))
+
+    ok, motivo = db.ativar_licenca(chave, maquina_id, nome_maquina)
+    if not ok:
+        mensagens = {
+            "nao_encontrada": "Essa chave não existe.",
+            "revogada": "Essa licença foi revogada.",
+            "em_uso": "Essa chave já está ativada em outra máquina.",
+        }
+        flash(mensagens.get(motivo, f"Não foi possível ativar (motivo: {motivo})."))
+        return redirect(url_for("admin_painel"))
+
+    token = gerar_token(chave, maquina_id)
+    flash(f"Token gerado -- copie e mande pro cliente colar na tela de ativação dele: {token}")
     return redirect(url_for("admin_painel"))
 
 

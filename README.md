@@ -86,6 +86,22 @@ Depois de configurar essas variáveis e o Render reimplantar sozinho,
 o painel mostra "✅ Backup automático por e-mail ativo" com um botão
 pra testar o envio na hora, sem precisar esperar o prazo.
 
+## Cliente sem internet (ativação manual)
+
+Se o computador do cliente não tem internet, a tela de ativação dele
+mostra um link "Este computador não tem internet?" que revela um
+código único daquela máquina. O fluxo é:
+
+1. O cliente te manda esse código (WhatsApp, e-mail etc.), junto com
+   a chave de licença que ele já tem
+2. No seu painel, no card **"Ativação manual"**, cole a chave e esse
+   código, e clique em gerar
+3. Aparece um token (um texto longo) -- copia e manda de volta pro
+   cliente
+4. O cliente cola esse token no campo correspondente, na mesma tela
+   de ativação dele -- e pronto, ativa sem precisar de internet
+   NAQUELE computador (só aqui, do seu lado, que já tem)
+
 ## Usando o painel administrativo
 
 Acesse a URL do servidor (ex: `https://webnest-licencas.onrender.com`)
