@@ -26,6 +26,12 @@ SENHA_ADMIN = os.environ.get("LICENSE_ADMIN_PASSWORD", "troque-esta-senha")
 # configuradas (veja backup_email.py)
 backup_email.iniciar_backup_periodico_em_segundo_plano()
 
+# arquiva sozinha, uma vez por dia, qualquer licença revogada há mais
+# de LIMPEZA_REVOGADAS_DIAS (padrão: 90) -- configurável via variável
+# de ambiente, caso queira um prazo diferente
+LIMPEZA_REVOGADAS_DIAS = int(os.environ.get("LIMPEZA_REVOGADAS_DIAS", "90"))
+db.iniciar_limpeza_periodica_em_segundo_plano(dias=LIMPEZA_REVOGADAS_DIAS)
+
 
 def admin_obrigatorio(f):
     @wraps(f)
@@ -130,6 +136,30 @@ def admin_liberar():
     db.liberar_licenca(chave)
     flash(f"Licença {chave} liberada -- pode ser ativada numa máquina nova agora.")
     return redirect(url_for("admin_painel"))
+
+
+@app.route("/admin/excluir", methods=["POST"])
+@admin_obrigatorio
+def admin_excluir():
+    """
+    Exclui uma licença da lista principal -- mas o registro não some
+    de verdade, vai pro histórico (seção "Licenças excluídas" no
+    painel), com data e motivo. Pensado pra limpar a lista principal
+    sem perder rastro pra sempre.
+    """
+    chave = request.form.get("chave")
+    ok = db.excluir_licenca(chave, motivo="manual")
+    if ok:
+        flash(f"Licença {chave} excluída -- continua disponível no histórico de excluídas.")
+    else:
+        flash(f"Não encontrei a licença {chave}.")
+    return redirect(url_for("admin_painel"))
+
+
+@app.route("/admin/excluidas", methods=["GET"])
+@admin_obrigatorio
+def admin_excluidas():
+    return render_template("admin_excluidas.html", licencas=db.listar_licencas_excluidas())
 
 
 @app.route("/admin/ativar-manual", methods=["POST"])

@@ -102,6 +102,20 @@ código único daquela máquina. O fluxo é:
    de ativação dele -- e pronto, ativa sem precisar de internet
    NAQUELE computador (só aqui, do seu lado, que já tem)
 
+## Excluindo licenças
+
+O botão **"Excluir"**, ao lado de cada licença, tira ela da lista
+principal -- mas o registro não desaparece de verdade, vai para
+**"Ver licenças excluídas"** (link no topo da lista), com a data e o
+motivo. Serve pra manter a lista principal limpa sem perder o
+histórico de vendas antigas.
+
+Além da exclusão manual, o sistema **arquiva sozinho**, uma vez por
+dia, qualquer licença revogada há mais de 90 dias (configurável pela
+variável de ambiente `LIMPEZA_REVOGADAS_DIAS`) -- uma licença revogada
+não volta a funcionar sozinha, então depois de um tempo ela só ocupa
+espaço na lista principal sem servir de referência imediata.
+
 ## Usando o painel administrativo
 
 Acesse a URL do servidor (ex: `https://webnest-licencas.onrender.com`)
